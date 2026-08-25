@@ -1,23 +1,17 @@
-FROM python:3.12-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
-COPY app.py .
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PORT=7860
 
-RUN pip install --upgrade pip
+COPY requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install gunicorn
+COPY app.py .
 
 EXPOSE 7860
 
-CMD ["gunicorn", "app:app", \
-     "-w", "4", \
-     "--worker-class", "gevent", \
-     "--worker-connections", "100", \
-     "-b", "0.0.0.0:7860", \
-     "--timeout", "120", \
-     "--keep-alive", "5", \
-     "--max-requests", "1000", \
-     "--max-requests-jitter", "100"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT} --workers 2 --threads 4 --timeout 120 app:app"]
